@@ -10,23 +10,23 @@ import android.widget.ImageView;
  */
 public final class SquareImageView extends AppCompatImageView {
 
-  public SquareImageView(Context context) {
-    super(context);
-  }
+    public SquareImageView(Context context) {
+        super(context);
+    }
 
-  public SquareImageView(Context context, AttributeSet attrs) {
-    super(context, attrs);
-  }
+    public SquareImageView(Context context, AttributeSet attrs) {
+        super(context, attrs);
+    }
 
-  public SquareImageView(Context context, AttributeSet attrs, int defStyleAttr) {
-    super(context, attrs, defStyleAttr);
-  }
+    public SquareImageView(Context context, AttributeSet attrs, int defStyleAttr) {
+        super(context, attrs, defStyleAttr);
+    }
 
-  // We want a square view.
-  @SuppressWarnings("SuspiciousNameCombination")
-  @Override
-  protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-    super.onMeasure(widthMeasureSpec, widthMeasureSpec);
-  }
+    // We want a square view.
+    @SuppressWarnings("SuspiciousNameCombination")
+    @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        super.onMeasure(widthMeasureSpec, widthMeasureSpec);
+    }
 }
 

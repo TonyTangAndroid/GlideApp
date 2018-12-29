@@ -1,6 +1,7 @@
 package com.bumptech.glide.samples.flickr;
 
 import com.bumptech.glide.samples.flickr.api.Photo;
+
 import java.util.List;
 
 /**
@@ -8,10 +9,10 @@ import java.util.List;
  * objects.
  */
 interface PhotoViewer {
-  /**
-   * Called whenever new {@link com.bumptech.glide.samples.flickr.api.Photo}s are loaded.
-   *
-   * @param photos The loaded photos.
-   */
-  void onPhotosUpdated(List<Photo> photos);
+    /**
+     * Called whenever new {@link com.bumptech.glide.samples.flickr.api.Photo}s are loaded.
+     *
+     * @param photos The loaded photos.
+     */
+    void onPhotosUpdated(List<Photo> photos);
 }
