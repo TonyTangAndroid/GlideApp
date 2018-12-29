@@ -1,11 +1,15 @@
 package com.nileshdeokar.glideapp;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Environment;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -15,14 +19,14 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.DataSource;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
-import com.bumptech.glide.load.resource.drawable.GlideDrawable;
+import com.bumptech.glide.load.engine.GlideException;
 import com.bumptech.glide.request.RequestListener;
-import com.bumptech.glide.request.animation.GlideAnimation;
 import com.bumptech.glide.request.target.SimpleTarget;
 import com.bumptech.glide.request.target.Target;
-import com.bumptech.glide.signature.StringSignature;
+import com.bumptech.glide.request.transition.Transition;
+import com.bumptech.glide.signature.ObjectKey;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -34,6 +38,7 @@ import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
 
+    public static final String URL = "https://cdn-images-1.medium.com/max/1200/1*hcfIq_37pabmAOnw3rhvGA.png";
     private static final String TAG = MainActivity.class.getName().toString();
     private int count;
     private long lastModified;
@@ -53,18 +58,14 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
         lastModified = Calendar.getInstance().getTimeInMillis() - 100;
-
-        imageView = (ImageView) findViewById(R.id.imageView);
-
-        tvStatus = (TextView) findViewById(R.id.tvStatus);
-
-        etUrl = (EditText) findViewById(R.id.editText);
+        imageView = findViewById(R.id.imageView);
+        tvStatus = findViewById(R.id.tvStatus);
+        etUrl = findViewById(R.id.editText);
 
         imageView.setTag(R.id.imageView, 33);
 
-        etUrl.setText("https://cdn-images-1.medium.com/max/1200/1*hcfIq_37pabmAOnw3rhvGA.png");
+        etUrl.setText(URL);
     }
 
     /*
@@ -76,71 +77,26 @@ public class MainActivity extends AppCompatActivity {
      * */
 
     private void loadImage(String url) {
-        Glide.with(this)
+        GlideApp.with(this)
                 .load(url)
-
-                /*
-
-                Use this to set the expiry time of 1 day
-
-                .signature(new StringSignature(
-                    System.currentTimeMillis() / (24 * 60 * 60 * 1000)))
-                */
-
-                .signature(new StringSignature(String.valueOf(lastModified)))
-                .diskCacheStrategy(DiskCacheStrategy.SOURCE)
+                .signature(new ObjectKey(String.valueOf(lastModified)))
+                .diskCacheStrategy(DiskCacheStrategy.DATA)
                 .error(R.color.chart_grey)
-                .listener(new RequestListener<String, GlideDrawable>() {
+                .listener(new RequestListener<Drawable>() {
                     @Override
-                    public boolean onException(Exception e, String model, Target<GlideDrawable> target,
-                                               boolean isFirstResource) {
+                    public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
                         return false;
                     }
 
+                    @SuppressLint("SetTextI18n")
                     @Override
-                    public boolean onResourceReady(GlideDrawable resource, String model,
-                                                   Target<GlideDrawable> target, boolean isFromMemoryCache, boolean isFirstResource) {
-
-                        tvStatus.setText("Count :" + count + " isFromCache : " + isFromMemoryCache);
-
+                    public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) {
+                        tvStatus.setText("Count :" + count + " isFromCache : " + isFirstResource);
                         return false;
                     }
                 })
                 .placeholder(R.color.colorPrimary)
                 .into(imageView);
-
-
-
-
-
-/*
-    Use this code to avoid grey bg in the images
-
-    Glide.with(this)
-        .load(url)
-        .asBitmap()
-        .encoder(new BitmapEncoder(Bitmap.CompressFormat.PNG,100))
-        .placeholder(R.color.colorPrimary)
-        .error(R.color.chart_grey)
-        .format(PREFER_ARGB_8888)
-        .diskCacheStrategy(DiskCacheStrategy.SOURCE)
-        .animate(android.R.anim.fade_in)
-         .signature(new StringSignature(String.valueOf(lastModified)))
-         .listener(new RequestListener<String, GlideDrawable>() {
-          @Override
-          public boolean onException(Exception e, String model, Target<GlideDrawable> target,
-              boolean isFirstResource) {
-            return false;
-          }
-
-          @Override public boolean onResourceReady(GlideDrawable resource, String model,
-              Target<GlideDrawable> target, boolean isFromMemoryCache, boolean isFirstResource) {
-
-            tvStatus.setText("Count :"+ count +" isFromCache : "+isFromMemoryCache);
-            return false;
-          }
-        })
-        .into(imageView);*/
     }
 
     public void reload(View view) {
@@ -151,7 +107,6 @@ public class MainActivity extends AppCompatActivity {
             loadImage(getString(R.string.img_url_default));
         }
         if (count == 3) {
-            // reload new image modify update time
             count = 0;
             lastModified = Calendar.getInstance().getTimeInMillis() - 100;
         }
@@ -178,13 +133,13 @@ public class MainActivity extends AppCompatActivity {
     public void saveImage(View view) {
         String url = etUrl.getText().toString().trim();
 
-        Glide.with(this)
-                .load(url)
+        GlideApp.with(this)
                 .asBitmap()
-                .diskCacheStrategy(DiskCacheStrategy.SOURCE)
+                .load(url)
+                .diskCacheStrategy(DiskCacheStrategy.DATA)
                 .into(new SimpleTarget<Bitmap>() {
                     @Override
-                    public void onResourceReady(Bitmap resource, GlideAnimation<? super Bitmap> glideAnimation) {
+                    public void onResourceReady(@NonNull Bitmap resource, @Nullable Transition<? super Bitmap> transition) {
                         Log.d("Size ", "width :" + resource.getWidth() + " height :" + resource.getHeight());
                         imageView.setImageBitmap(resource);
                         storeImage(resource);
@@ -272,8 +227,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode,
-                                           String permissions[], int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
         switch (requestCode) {
             case 1: {
 
@@ -284,18 +238,7 @@ public class MainActivity extends AppCompatActivity {
                 } else {
                     Toast.makeText(MainActivity.this, "Permission denied to write your External storage", Toast.LENGTH_SHORT).show();
                 }
-                return;
             }
         }
     }
-
-
-   /* User RequestManager Object in Recyclerview
-    Download Bitmaps using 
-    ref :http://stackoverflow.com/a/27394484/3746306
-    User Listner for error logging
-    https://github.com/bumptech/glide/wiki/Debugging-and-Error-Handling#requestlistener
-    Progress bar while loading imageView
-    http://stackoverflow.com/a/35306315/3746306*/
-
 }
