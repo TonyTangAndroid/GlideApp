@@ -32,24 +32,29 @@ import java.util.Calendar;
 import java.util.Random;
 
 
-
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = MainActivity.class.getName().toString();
-    private int count ;
-    private long lastModified ;
+    private int count;
+    private long lastModified;
     private EditText etUrl;
     private ImageView imageView;
     private TextView tvStatus;
 
     private Bitmap mBitmap;
 
+    public static boolean isSdPresent() {
+
+        return android.os.Environment.getExternalStorageState().equals(android.os.Environment.MEDIA_MOUNTED);
+
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        lastModified = Calendar.getInstance().getTimeInMillis()-100;
+        lastModified = Calendar.getInstance().getTimeInMillis() - 100;
 
         imageView = (ImageView) findViewById(R.id.imageView);
 
@@ -57,43 +62,52 @@ public class MainActivity extends AppCompatActivity {
 
         etUrl = (EditText) findViewById(R.id.editText);
 
-        imageView.setTag(R.id.imageView,33);
+        imageView.setTag(R.id.imageView, 33);
 
         etUrl.setText("https://cdn-images-1.medium.com/max/1200/1*hcfIq_37pabmAOnw3rhvGA.png");
     }
 
+    /*
+     *   We are keeping track of refresh count in count variable
+     *   on 1st call if no image url is specified we are using default img url specified in strings.xml
+     *
+     *   on 3rd refresh we are updating the lastModified time which in result loads image from server
+     *
+     * */
+
     private void loadImage(String url) {
         Glide.with(this)
-            .load(url)
+                .load(url)
 
-            /*
+                /*
 
-            Use this to set the expiry time of 1 day
+                Use this to set the expiry time of 1 day
 
-            .signature(new StringSignature(
-                System.currentTimeMillis() / (24 * 60 * 60 * 1000)))
-            */
+                .signature(new StringSignature(
+                    System.currentTimeMillis() / (24 * 60 * 60 * 1000)))
+                */
 
-            .signature(new StringSignature(String.valueOf(lastModified)))
-            .diskCacheStrategy(DiskCacheStrategy.SOURCE)
-            .error(R.color.chart_grey)
-            .listener(new RequestListener<String, GlideDrawable>() {
-                @Override
-                public boolean onException(Exception e, String model, Target<GlideDrawable> target,
-                    boolean isFirstResource) {
-                    return false;
-                }
+                .signature(new StringSignature(String.valueOf(lastModified)))
+                .diskCacheStrategy(DiskCacheStrategy.SOURCE)
+                .error(R.color.chart_grey)
+                .listener(new RequestListener<String, GlideDrawable>() {
+                    @Override
+                    public boolean onException(Exception e, String model, Target<GlideDrawable> target,
+                                               boolean isFirstResource) {
+                        return false;
+                    }
 
-                @Override public boolean onResourceReady(GlideDrawable resource, String model,
-                    Target<GlideDrawable> target, boolean isFromMemoryCache, boolean isFirstResource) {
+                    @Override
+                    public boolean onResourceReady(GlideDrawable resource, String model,
+                                                   Target<GlideDrawable> target, boolean isFromMemoryCache, boolean isFirstResource) {
 
-                    tvStatus.setText("Count :"+ count +" isFromCache : "+isFromMemoryCache);
+                        tvStatus.setText("Count :" + count + " isFromCache : " + isFromMemoryCache);
 
-                    return false;
-                }
-            })
-            .placeholder(R.color.colorPrimary)
-            .into(imageView);
+                        return false;
+                    }
+                })
+                .placeholder(R.color.colorPrimary)
+                .into(imageView);
 
 
 
@@ -129,90 +143,81 @@ public class MainActivity extends AppCompatActivity {
         .into(imageView);*/
     }
 
-  /*
-  *   We are keeping track of refresh count in count variable
-  *   on 1st call if no image url is specified we are using default img url specified in strings.xml
-  *
-  *   on 3rd refresh we are updating the lastModified time which in result loads image from server
-  *
-  * */
-
     public void reload(View view) {
 
         String url = etUrl.getText().toString().trim();
-        if(count==0 && url.isEmpty()) {
+        if (count == 0 && url.isEmpty()) {
             etUrl.setText(getString(R.string.img_url_default));
             loadImage(getString(R.string.img_url_default));
         }
-        if(count==3){
+        if (count == 3) {
             // reload new image modify update time
-            count=0;
-            lastModified = Calendar.getInstance().getTimeInMillis()-100;
+            count = 0;
+            lastModified = Calendar.getInstance().getTimeInMillis() - 100;
         }
 
-        if(!url.isEmpty()){
+        if (!url.isEmpty()) {
             loadImage(url);
         }
 
         count++;
     }
 
-
-     /*
-      * get Tag from imageView
-      *
-      */
-    public void getTag(View view){
-        Toast.makeText(this,"Tag is : " + view.getTag(R.id.imageView),Toast.LENGTH_SHORT).show();
+    /*
+     * get Tag from imageView
+     *
+     */
+    public void getTag(View view) {
+        Toast.makeText(this, "Tag is : " + view.getTag(R.id.imageView), Toast.LENGTH_SHORT).show();
     }
 
-     /*
-      *  save image to external / internal storage using Glide
-      *
-      */
-     public void saveImage(View view){
-         String url = etUrl.getText().toString().trim();
+    /*
+     *  save image to external / internal storage using Glide
+     *
+     */
+    public void saveImage(View view) {
+        String url = etUrl.getText().toString().trim();
 
-         Glide.with(this)
-                 .load(url)
-                 .asBitmap()
-                 .diskCacheStrategy(DiskCacheStrategy.SOURCE)
-                 .into(new SimpleTarget<Bitmap>() {
-                     @Override
-                     public void onResourceReady(Bitmap resource, GlideAnimation<? super Bitmap> glideAnimation) {
-                         Log.d("Size ", "width :"+resource.getWidth() + " height :"+resource.getHeight());
-                         imageView.setImageBitmap(resource);
-                         storeImage(resource);
-                     }
-                 });
+        Glide.with(this)
+                .load(url)
+                .asBitmap()
+                .diskCacheStrategy(DiskCacheStrategy.SOURCE)
+                .into(new SimpleTarget<Bitmap>() {
+                    @Override
+                    public void onResourceReady(Bitmap resource, GlideAnimation<? super Bitmap> glideAnimation) {
+                        Log.d("Size ", "width :" + resource.getWidth() + " height :" + resource.getHeight());
+                        imageView.setImageBitmap(resource);
+                        storeImage(resource);
+                    }
+                });
 
-     }
+    }
 
     private void storeImage(Bitmap image) {
         mBitmap = image;
         File pictureFile = getOutputMediaFile();
         try {
-        if (pictureFile == null) {
+            if (pictureFile == null) {
 
-            if(checkWriteExternalPermission()) {
+                if (checkWriteExternalPermission()) {
 
-                FileOutputStream fos = getBaseContext().openFileOutput("file_name" + ".jps", Context.MODE_PRIVATE);
-                image.compress(Bitmap.CompressFormat.PNG, 90, fos);
-                fos.close();
-            }else {
-                ActivityCompat.requestPermissions(MainActivity.this,
-                        new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                        1);
+                    FileOutputStream fos = getBaseContext().openFileOutput("file_name" + ".jps", Context.MODE_PRIVATE);
+                    image.compress(Bitmap.CompressFormat.PNG, 90, fos);
+                    fos.close();
+                } else {
+                    ActivityCompat.requestPermissions(MainActivity.this,
+                            new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                            1);
+                }
+                return;
             }
-            return;
-        }
 
-            if(checkWriteExternalPermission()) {
+            if (checkWriteExternalPermission()) {
 
                 FileOutputStream fos = new FileOutputStream(pictureFile);
                 image.compress(Bitmap.CompressFormat.PNG, 90, fos);
                 fos.close();
-            }else {
+            } else {
                 ActivityCompat.requestPermissions(MainActivity.this,
                         new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
                         1);
@@ -229,13 +234,12 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
-    private  File getOutputMediaFile(){
+    private File getOutputMediaFile() {
         // To be safe, you should check that the SDCard is mounted
         // using Environment.getExternalStorageState() before doing this.
 
-        if(isSdPresent()) {
-            File   mediaStorageDir = new File(Environment.getExternalStorageDirectory()
+        if (isSdPresent()) {
+            File mediaStorageDir = new File(Environment.getExternalStorageDirectory()
                     + "/Android/data/"
                     + getApplicationContext().getPackageName()
                     + "/Files");
@@ -255,24 +259,16 @@ public class MainActivity extends AppCompatActivity {
 
             mediaFile = new File(mediaStorageDir.getPath() + File.separator + mImageName);
             return mediaFile;
-        }else {
+        } else {
             Toast.makeText(this, "SD Card not present", Toast.LENGTH_SHORT).show();
         }
         return null;
 
     }
 
-
-    private boolean checkWriteExternalPermission()
-    {
+    private boolean checkWriteExternalPermission() {
         int res = this.checkCallingOrSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE);
         return (res == PackageManager.PERMISSION_GRANTED);
-    }
-
-    public static boolean isSdPresent() {
-
-        return android.os.Environment.getExternalStorageState().equals(android.os.Environment.MEDIA_MOUNTED);
-
     }
 
     @Override
